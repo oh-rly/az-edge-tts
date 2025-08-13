@@ -3,6 +3,8 @@
 from flask import request, jsonify
 from functools import wraps
 import os
+import uuid
+import time
 from dotenv import load_dotenv
 
 from config import DEFAULT_CONFIGS
@@ -19,6 +21,25 @@ API_KEY = os.getenv('API_KEY', DEFAULT_CONFIGS["API_KEY"])
 REQUIRE_API_KEY = getenv_bool('REQUIRE_API_KEY', DEFAULT_CONFIGS["REQUIRE_API_KEY"])
 DETAILED_ERROR_LOGGING = getenv_bool('DETAILED_ERROR_LOGGING', DEFAULT_CONFIGS["DETAILED_ERROR_LOGGING"])
 
+# Token handling for issueToken simulation
+TOKEN_TTL = int(os.getenv('TOKEN_TTL', '600'))  # default 10 minutes
+TOKENS: dict[str, float] = {}
+
+def generate_token() -> str:
+    token = uuid.uuid4().hex
+    TOKENS[token] = time.time() + TOKEN_TTL
+    return token
+
+def is_valid_token(token: str) -> bool:
+    if token == API_KEY:
+        return True
+    expiry = TOKENS.get(token)
+    if expiry and expiry > time.time():
+        return True
+    if expiry and expiry <= time.time():
+        del TOKENS[token]
+    return False
+
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -28,8 +49,8 @@ def require_api_key(f):
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"error": "Missing or invalid API key"}), 401
         token = auth_header.split('Bearer ')[1]
-        if token != API_KEY:
-            return jsonify({"error": "Invalid API key"}), 401
+        if not is_valid_token(token):
+            return jsonify({"error": "Invalid or expired API key"}), 401
         return f(*args, **kwargs)
     return decorated_function
 

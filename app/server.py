@@ -10,12 +10,18 @@ from xml.etree import ElementTree as ET
 from config import DEFAULT_CONFIGS
 from handle_text import prepare_tts_input_with_context
 from tts_handler import generate_speech, get_voices
-from utils import getenv_bool, require_api_key, AUDIO_FORMAT_MIME_TYPES, DETAILED_ERROR_LOGGING
+from utils import (
+    getenv_bool,
+    require_api_key,
+    AUDIO_FORMAT_MIME_TYPES,
+    DETAILED_ERROR_LOGGING,
+    generate_token,
+    API_KEY,
+)
 
 app = Flask(__name__)
 load_dotenv()
 
-API_KEY = os.getenv('API_KEY', DEFAULT_CONFIGS["API_KEY"])
 PORT = int(os.getenv('PORT', str(DEFAULT_CONFIGS["PORT"])))
 
 DEFAULT_VOICE = os.getenv('DEFAULT_VOICE', DEFAULT_CONFIGS["DEFAULT_VOICE"])
@@ -85,6 +91,16 @@ def azure_voices_list():
     language = request.args.get('language') or request.args.get('locale')
     voices = get_voices(language if language else None)
     return jsonify(voices)
+
+
+@app.route('/sts/v1.0/issueToken', methods=['POST'])
+def issue_token():
+    """Simulate Azure issueToken endpoint."""
+    subs_key = request.headers.get('Ocp-Apim-Subscription-Key') or request.headers.get('Subscription-Key')
+    if subs_key != API_KEY:
+        return '', 401
+    token = generate_token()
+    return token, 200, {'Content-Type': 'text/plain'}
 
 
 print("Azure Voices API compatible server")
