@@ -7,7 +7,7 @@ This project exposes Microsoft Edge's free text-to-speech service with endpoints
 - **Azure-Compatible Endpoints**
   - `POST /cognitiveservices/v1` for text-to-speech using SSML.
   - `GET /cognitiveservices/voices/list` to retrieve available voices.
-  - `POST /sts/v1.0/issueToken` to exchange an API key for a short‑lived bearer token.
+  - `POST /sts/v1.0/issueToken` to exchange an `Ocp-Apim-Subscription-Key` for a short‑lived bearer token.
 - **Multiple Audio Formats** – Specify the desired format using the `X-Microsoft-OutputFormat` header (mp3, wav, flac, opus, aac).
 - **Runs with Python** – No Docker required. Uses the `edge-tts` library under the hood.
 
@@ -31,7 +31,7 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
-API_KEY=your_api_key_here
+OCP_APIM_SUBSCRIPTION_KEY=your_subscription_key_here
 PORT=5050
 
 DEFAULT_VOICE=en-US-AvaNeural

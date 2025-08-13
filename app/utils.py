@@ -17,7 +17,7 @@ def getenv_bool(name: str, default: bool = False) -> bool:
     # For typical usage, the config default (passed at call site) is preferred.
     return os.getenv(name, str(default)).lower() in ("yes", "y", "true", "1", "t")
 
-API_KEY = os.getenv('API_KEY', DEFAULT_CONFIGS["API_KEY"])
+SUBSCRIPTION_KEY = os.getenv('OCP_APIM_SUBSCRIPTION_KEY', DEFAULT_CONFIGS["SUBSCRIPTION_KEY"])
 REQUIRE_API_KEY = getenv_bool('REQUIRE_API_KEY', DEFAULT_CONFIGS["REQUIRE_API_KEY"])
 DETAILED_ERROR_LOGGING = getenv_bool('DETAILED_ERROR_LOGGING', DEFAULT_CONFIGS["DETAILED_ERROR_LOGGING"])
 
@@ -31,7 +31,7 @@ def generate_token() -> str:
     return token
 
 def is_valid_token(token: str) -> bool:
-    if token == API_KEY:
+    if token == SUBSCRIPTION_KEY:
         return True
     expiry = TOKENS.get(token)
     if expiry and expiry > time.time():
@@ -47,10 +47,10 @@ def require_api_key(f):
             return f(*args, **kwargs)
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({"error": "Missing or invalid API key"}), 401
+            return jsonify({"error": "Missing or invalid Ocp-Apim-Subscription-Key"}), 401
         token = auth_header.split('Bearer ')[1]
         if not is_valid_token(token):
-            return jsonify({"error": "Invalid or expired API key"}), 401
+            return jsonify({"error": "Invalid or expired Ocp-Apim-Subscription-Key"}), 401
         return f(*args, **kwargs)
     return decorated_function
 

@@ -16,7 +16,7 @@ from utils import (
     AUDIO_FORMAT_MIME_TYPES,
     DETAILED_ERROR_LOGGING,
     generate_token,
-    API_KEY,
+    SUBSCRIPTION_KEY,
 )
 
 app = Flask(__name__)
@@ -97,7 +97,7 @@ def azure_voices_list():
 def issue_token():
     """Simulate Azure issueToken endpoint."""
     subs_key = request.headers.get('Ocp-Apim-Subscription-Key') or request.headers.get('Subscription-Key')
-    if subs_key != API_KEY:
+    if subs_key != SUBSCRIPTION_KEY:
         return '', 401
     token = generate_token()
     return token, 200, {'Content-Type': 'text/plain'}
