@@ -13,27 +13,6 @@ from config import DEFAULT_CONFIGS
 # Language default (environment variable)
 DEFAULT_LANGUAGE = os.getenv('DEFAULT_LANGUAGE', DEFAULT_CONFIGS["DEFAULT_LANGUAGE"])
 
-# OpenAI voice names mapped to edge-tts equivalents
-voice_mapping = {
-    'alloy': 'en-US-JennyNeural',
-    'ash': 'en-US-AndrewNeural',
-    'ballad': 'en-GB-ThomasNeural',
-    'coral': 'en-AU-NatashaNeural',
-    'echo': 'en-US-GuyNeural',
-    'fable': 'en-GB-SoniaNeural',
-    'nova': 'en-US-AriaNeural',
-    'onyx': 'en-US-EricNeural',
-    'sage': 'en-US-JennyNeural',
-    'shimmer': 'en-US-EmmaNeural',
-    'verse': 'en-US-BrianNeural',
-}
-
-model_data = [
-        {"id": "tts-1", "name": "Text-to-speech v1"},
-        {"id": "tts-1-hd", "name": "Text-to-speech v1 HD"},
-        {"id": "gpt-4o-mini-tts", "name": "GPT-4o mini TTS"}
-    ]
-
 def is_ffmpeg_installed():
     """Check if FFmpeg is installed and accessible."""
     try:
@@ -44,18 +23,15 @@ def is_ffmpeg_installed():
 
 async def _generate_audio_stream(text, voice, speed):
     """Generate streaming TTS audio using edge-tts."""
-    # Determine if the voice is an OpenAI-compatible voice or a direct edge-tts voice
-    edge_tts_voice = voice_mapping.get(voice, voice)  # Use mapping if in OpenAI names, otherwise use as-is
-    
     # Convert speed to SSML rate format
     try:
         speed_rate = speed_to_rate(speed)  # Convert speed value to "+X%" or "-X%"
     except Exception as e:
         print(f"Error converting speed: {e}. Defaulting to +0%.")
         speed_rate = "+0%"
-    
+
     # Create the communicator for streaming
-    communicator = edge_tts.Communicate(text=text, voice=edge_tts_voice, rate=speed_rate)
+    communicator = edge_tts.Communicate(text=text, voice=voice, rate=speed_rate)
     
     # Stream the audio data
     async for chunk in communicator.stream():
@@ -68,9 +44,6 @@ def generate_speech_stream(text, voice, speed=1.0):
 
 async def _generate_audio(text, voice, response_format, speed):
     """Generate TTS audio and optionally convert to a different format."""
-    # Determine if the voice is an OpenAI-compatible voice or a direct edge-tts voice
-    edge_tts_voice = voice_mapping.get(voice, voice)  # Use mapping if in OpenAI names, otherwise use as-is
-
     # Generate the TTS output in mp3 format first
     temp_mp3_file_obj = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
     temp_mp3_path = temp_mp3_file_obj.name
@@ -83,7 +56,7 @@ async def _generate_audio(text, voice, response_format, speed):
         speed_rate = "+0%"
 
     # Generate the MP3 file
-    communicator = edge_tts.Communicate(text=text, voice=edge_tts_voice, rate=speed_rate)
+    communicator = edge_tts.Communicate(text=text, voice=voice, rate=speed_rate)
     await communicator.save(temp_mp3_path)
     temp_mp3_file_obj.close() # Explicitly close our file object for the initial mp3
 
@@ -154,24 +127,13 @@ async def _generate_audio(text, voice, response_format, speed):
 def generate_speech(text, voice, response_format, speed=1.0):
     return asyncio.run(_generate_audio(text, voice, response_format, speed))
 
-def get_models():
-    return model_data
-
-def get_models_formatted():
-    return [{ "id": x["id"] } for x in model_data]
-
-def get_voices_formatted():
-    return [{ "id": k, "name": v } for k, v in voice_mapping.items()]
-
 async def _get_voices(language=None):
     # List all voices, filter by language if specified
     all_voices = await edge_tts.list_voices()
     language = language or DEFAULT_LANGUAGE  # Use default if no language specified
-    filtered_voices = [
-        {"name": v['ShortName'], "gender": v['Gender'], "language": v['Locale']}
-        for v in all_voices if language == 'all' or language is None or v['Locale'] == language
-    ]
-    return filtered_voices
+    if language and language != 'all':
+        all_voices = [v for v in all_voices if v.get('Locale') == language]
+    return all_voices
 
 def get_voices(language=None):
     return asyncio.run(_get_voices(language))

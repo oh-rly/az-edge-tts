@@ -14,6 +14,6 @@ DEFAULT_CONFIGS = {
     # Feature flags
     "REQUIRE_API_KEY": True,
     "REMOVE_FILTER": False,
-    "EXPAND_API": True,
     "DETAILED_ERROR_LOGGING": True,
-} 
+}
+
