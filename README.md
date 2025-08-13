@@ -7,6 +7,7 @@ This project exposes Microsoft Edge's free text-to-speech service with endpoints
 - **Azure-Compatible Endpoints**
   - `POST /cognitiveservices/v1` for text-to-speech using SSML.
   - `GET /cognitiveservices/voices/list` to retrieve available voices.
+  - `POST /sts/v1.0/issueToken` to exchange an API key for a short‑lived bearer token.
 - **Multiple Audio Formats** – Specify the desired format using the `X-Microsoft-OutputFormat` header (mp3, wav, flac, opus, aac).
 - **Runs with Python** – No Docker required. Uses the `edge-tts` library under the hood.
 
@@ -51,10 +52,18 @@ python app/server.py
 
 ## Usage
 
+### Retrieve an Access Token
+
+```bash
+TOKEN=$(curl -s -X POST \
+  -H "Ocp-Apim-Subscription-Key: YOUR_KEY" \
+  http://localhost:5050/sts/v1.0/issueToken)
+```
+
 ### List Voices
 
 ```bash
-curl -H "Authorization: Bearer YOUR_KEY" \
+curl -H "Authorization: Bearer $TOKEN" \
   http://localhost:5050/cognitiveservices/voices/list
 ```
 
@@ -62,7 +71,7 @@ curl -H "Authorization: Bearer YOUR_KEY" \
 
 ```bash
 curl -X POST "http://localhost:5050/cognitiveservices/v1" \
-  -H "Authorization: Bearer YOUR_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/ssml+xml" \
   -H "X-Microsoft-OutputFormat: audio-24khz-48kbitrate-mono-mp3" \
   -d '<speak version="1.0" xml:lang="en-US"><voice name="en-US-AvaNeural">Hello from Azure compatible API</voice></speak>' \
