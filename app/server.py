@@ -107,6 +107,7 @@ print("Azure Voices API compatible server")
 print(f" * Server running on http://localhost:{PORT}")
 print(f" * Voice list: http://localhost:{PORT}/cognitiveservices/voices/list")
 print(f" * TTS endpoint: http://localhost:{PORT}/cognitiveservices/v1")
+print(f" * issueToken endpoint: http://localhost:{PORT}/sts/v1.0/issueToken.")
 
 if __name__ == '__main__':
     http_server = WSGIServer(('0.0.0.0', PORT), app)
