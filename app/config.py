@@ -3,7 +3,7 @@
 DEFAULT_CONFIGS = {
     # Server settings
     "PORT": 5050,
-    "API_KEY": 'your_api_key_here',  # Fallback API key
+    "SUBSCRIPTION_KEY": 'your_subscription_key_here',  # Fallback Ocp-Apim-Subscription-Key
 
     # TTS settings
     "DEFAULT_VOICE": 'en-US-AvaNeural',
